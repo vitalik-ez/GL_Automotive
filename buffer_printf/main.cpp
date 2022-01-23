@@ -6,7 +6,7 @@
 #include <chrono> 
 #include <algorithm>
 
-#define REPEATE_PRINT 100
+const unsigned int REPEATE_PRINT = 100;
 
 using namespace std;
 
@@ -31,7 +31,7 @@ string read_file() {
 	return file_contents;
 }
 
-auto test_printf(const char* text) {
+int64_t test_printf(const char* text) {
 	auto start = std::chrono::steady_clock::now();
 	for (unsigned int i = 0; i < REPEATE_PRINT; i++) {
 		printf("%s", text);
@@ -42,7 +42,7 @@ auto test_printf(const char* text) {
 }
 
 
-auto test_cout(const char* text) {
+int64_t test_cout(const char* text) {
 	auto start = std::chrono::steady_clock::now();
 	for (unsigned int i = 0; i < REPEATE_PRINT; i++) {
 		cout << text << endl; // endl clear buff
@@ -53,40 +53,33 @@ auto test_cout(const char* text) {
 }
 
 
-auto test_buffered_printf(string text) {
-
-	size_t buffer_size = 500;
-	size_t start_index = 0;
-
-	cout << "test_buffered_printf" << endl;
-
+int64_t test_buffered_printf(const string text) {
 	auto start = std::chrono::steady_clock::now();
 	
+	const size_t buffer_size = 500;
+	size_t start_index = 0;
+
+	char *buff = new(nothrow) char[buffer_size + 1];
+	if (!buff) {
+		cout << "Could not allocate memory";
+	}
+
 	for (unsigned int i = 0; i < REPEATE_PRINT; i++) {
-
-		char *buff = new(nothrow) char[buffer_size + 1];
-		if (!buff) {
-			cout << "Could not allocate memory";
-		}
-
 		while (start_index < text.length()) {
 
 			memcpy(buff, text.substr(start_index, start_index + buffer_size).c_str(), buffer_size);
 			buff[buffer_size] = '\0'; 
 
 			printf("%s", buff);
+			memset(buff, '\0', buffer_size);
 
-			delete[] buff;
-			buff = nullptr;
-			
-			buff = new(nothrow) char[buffer_size + 1];
-			if (!buff) {
-				cout << "Could not allocate memory";
-			}
 			start_index += buffer_size;
 		}
 		start_index = 0;
 	}
+
+	delete[] buff;
+	buff = nullptr;
 
 	auto end = chrono::steady_clock::now();
 	auto elapsed_ms = chrono::duration_cast<std::chrono::milliseconds>(end - start);  	
@@ -95,10 +88,10 @@ auto test_buffered_printf(string text) {
 
 int main() {
 
-	string text = read_file();
-	auto printf_time = test_printf(text.c_str());
-	auto cout_time = test_cout(text.c_str());
-	auto buffered_printf_time = test_buffered_printf(text);
+	const string text = read_file();
+	int64_t printf_time = test_printf(text.c_str());
+	int64_t cout_time = test_cout(text.c_str());
+	int64_t buffered_printf_time = test_buffered_printf(text);
 
 	cout << "TEST PRITNF elapsed time: " << printf_time << " ms\n";
 	cout << "TEST COUT elapsed time: " << cout_time << " ms\n";
